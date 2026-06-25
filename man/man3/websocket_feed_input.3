@@ -1,0 +1,35 @@
+.TH WEBSOCKET_FEED_INPUT 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+websocket_feed_input, websocket_get_output \- buffer-driven I/O surfaces (no syscalls)
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+
+size_t websocket_feed_input(websocket_ctx_t *ctx, const uint8_t *data, size_t len);
+size_t websocket_get_output(websocket_ctx_t *ctx, uint8_t *buf, size_t max_len);
+.fi
+.SH DESCRIPTION
+.B websocket_feed_input
+consumes up to \fBlen\fP bytes from the caller's buffer, parses frames, enqueues resulting events (TEXT/BINARY/PING/...), and returns the number of bytes actually consumed. May return less than \fBlen\fP if a frame is incomplete. Internally updates state and may allocate for reassembly (fragments).
+
+.B websocket_get_output
+copies pending serialized frames (from prior send_* calls) into the caller's \fBbuf\fP (up to \fBmax_len\fP) and returns bytes written. Advances the internal sent pointer. Safe to call repeatedly until 0.
+
+These are the only I/O entry points. Caller supplies bytes from their event loop (io_uring, epoll, etc.) and drains output to the wire.
+.SH RETURN VALUES
+feed_input: bytes consumed (>=0).
+get_output: bytes copied (>=0).
+.SH EXAMPLES
+Typical dialectic or event-loop loop:
+.nf
+uint8_t in[4096], out[4096];
+size_t n = read(fd, in, sizeof(in));  /* or io_uring */
+size_t used = websocket_feed_input(ctx, in, n);
+... process events via next_event ...
+size_t produced = websocket_get_output(ctx, out, sizeof(out));
+write(fd, out, produced);
+.fi
+.SH SEE ALSO
+websocket_next_event(3), websocket_send_text(3), websocket_create(3)
+.SH NOTES
+No blocking, no sockets inside library. All errors surfaced via events or return values.

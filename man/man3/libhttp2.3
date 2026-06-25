@@ -1,0 +1,36 @@
+.TH LIBHTTP2 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+libhttp2 \- pure C state-machine HTTP/2, HTTP/1.1 and WebSocket libraries (plumbing / PDU parsers)
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+#include <http1.h>
+#include <protocol_events.h>
+#include <http2.h>
+
+websocket_ctx_t *websocket_create(ws_role_t role);
+websocket_ctx_t *websocket_create_with_config(ws_role_t role, const websocket_config_t *config);
+int websocket_next_event(websocket_ctx_t *ctx, protocol_event_t *event);
+/* ... similar for http1_* and core http2_* */
+.fi
+.SH DESCRIPTION
+libhttp2 provides three sibling static libraries (http2, http1, websocket) implementing pure state machines for their respective protocols. All modules follow the plumbing model (see ADR 006): they parse/serialize PDUs, emit structured \fBprotocol_event_t\fP events via configurable queues, and expose raw data. The caller owns all I/O, policy, and decisions (no auto-responses inside the library).
+
+Key design points:
+.IP \(bu 2
+Configurable initialization via \fI*_config_t\fP (e.g. event_queue_size) at creation time.
+.IP \(bu 2
+Event-driven output: \fI*_next_event\fP returns 1 on event, 0 otherwise. Events carry \fBconst uint8_t *\fP data (valid until next feed or destroy).
+.IP \(bu 2
+Buffer-only interface: \fI*_feed_input\fP / \fI*_get_output\fP. Dialectic (client+server) testing uses only in-memory buffer handoff.
+.IP \(bu 2
+Strict C conventions: NULL ctx checks, explicit integer returns (0=success, -1=error, >0=bytes or event count), no callbacks or syscalls for I/O.
+.PP
+See individual manpages for each function. All modules share \fBprotocol_events.h\fP for events.
+.SH RETURN VALUES
+Creation functions return a valid opaque ctx or NULL (invalid config or allocation failure — caller must check).
+Event and I/O functions return counts or status codes as documented per function.
+.SH SEE ALSO
+websocket_create(3), websocket_next_event(3), websocket_feed_input(3), http1_create(3), protocol_event_t(3)
+.SH AUTHORS
+Project maintainers. MIT licensed (core).

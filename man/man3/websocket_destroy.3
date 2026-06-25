@@ -1,0 +1,22 @@
+.TH WEBSOCKET_DESTROY 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+websocket_destroy, websocket_current_state \- cleanup and state query
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+
+void websocket_destroy(websocket_ctx_t *ctx);
+ws_state_t websocket_current_state(const websocket_ctx_t *ctx);
+.fi
+.SH DESCRIPTION
+.B websocket_destroy
+releases all resources associated with the context (event queue, fragment buffer, ctx itself). NULL-safe.
+
+.B websocket_current_state
+returns the current ws_state_t (IDLE, OPEN, CLOSING, CLOSED, ERROR) or WS_STATE_ERROR if ctx is NULL.
+.SH RETURN VALUES
+current_state returns the enum value (no error codes).
+.SH SEE ALSO
+websocket_create(3), websocket_reset(3), libhttp2(3)
+.SH NOTES
+After destroy the pointer must not be used. Reset allows reuse of the allocation. State queries are safe for diagnostics.

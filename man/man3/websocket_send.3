@@ -1,0 +1,31 @@
+.TH WEBSOCKET_SEND 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+websocket_send_text, websocket_send_binary, websocket_send_ping, websocket_send_pong, websocket_send_close, websocket_send_frame \- explicit send helpers (return codes, no auto behavior)
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+
+int websocket_send_text(websocket_ctx_t *ctx, const char *text);
+int websocket_send_binary(websocket_ctx_t *ctx, const uint8_t *data, size_t len);
+int websocket_send_ping(websocket_ctx_t *ctx, const uint8_t *data, size_t len);
+int websocket_send_pong(websocket_ctx_t *ctx, const uint8_t *data, size_t len);
+int websocket_send_close(websocket_ctx_t *ctx, uint16_t code, const uint8_t *reason, size_t reason_len);
+int websocket_send_frame(websocket_ctx_t *ctx, ws_opcode_t opcode, int fin, const uint8_t *payload, size_t len);
+.fi
+.SH DESCRIPTION
+These functions serialize a frame into the internal output buffer for later retrieval via \fBget_output\fP. They perform no I/O and generate no automatic replies.
+
+All take a valid ctx (NULL check performed). Payload for PING/PONG/CLOSE may be NULL/0 for empty. CLOSE sets internal state to CLOSING.
+
+Low-level \fBsend_frame\fP allows custom opcodes and fin bit (for fragmentation).
+.SH RETURN VALUES
+0 on success, -1 on error (typically NULL ctx or invalid args for send_text/binary).
+.SH EXAMPLES
+.nf
+websocket_send_text(client, "hello");
+websocket_send_ping(server, NULL, 0);  /* empty ping */
+.fi
+.SH SEE ALSO
+websocket_get_output(3), websocket_next_event(3), websocket_create(3)
+.SH NOTES
+Per ADR 006, the library does not auto-PONG or auto-respond. Caller decides. Send calls are non-blocking.

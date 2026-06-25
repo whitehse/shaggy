@@ -1,0 +1,2 @@
+# Valgrind suppressions for libhttp2
+# Add known false positives here if needed

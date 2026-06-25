@@ -1,0 +1,31 @@
+.TH WEBSOCKET_NEXT_EVENT 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+websocket_next_event \- retrieve next protocol event from the context's queue (plumbing model)
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+#include <protocol_events.h>
+
+int websocket_next_event(websocket_ctx_t *ctx, protocol_event_t *event);
+.fi
+.SH DESCRIPTION
+Dequeues the next event (if any) into the caller-provided \fBevent\fP structure and returns 1. Returns 0 if the queue is empty or on invalid arguments (NULL ctx or event).
+
+Events are of type \fBprotocol_event_type_t\fP (WS_EVENT_TEXT, WS_EVENT_BINARY, WS_EVENT_PING, WS_EVENT_PONG, WS_EVENT_CLOSE, WS_EVENT_ERROR, ...). The \fBu.ws_message\fP or \fBu.ws_close\fP union member provides access to \fBconst uint8_t *data; size_t len;\fP (pointers are valid only until the next \fBfeed_input\fP or \fBdestroy\fP call — unencapsulated data per ADR 006).
+
+This is the primary mechanism for receiving parsed protocol data without the library performing actions.
+.SH RETURN VALUES
+1 if an event was copied into *event, 0 otherwise.
+.SH EXAMPLES
+.nf
+protocol_event_t ev;
+while (websocket_next_event(ws, &ev)) {
+    if (ev.type == WS_EVENT_TEXT) {
+        /* process ev.u.ws_message.data, len */
+    } else if (ev.type == WS_EVENT_ERROR) { ... }
+}
+.fi
+.SH SEE ALSO
+websocket_create(3), websocket_feed_input(3), protocol_event_t(3), libhttp2(3)
+.SH NOTES
+Queue size is set at creation. When full, further input may drop events (see enqueue logic). Caller owns interpretation and any responses.

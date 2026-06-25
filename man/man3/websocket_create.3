@@ -1,0 +1,41 @@
+.TH WEBSOCKET_CREATE 3 "2026-06-24" "libhttp2 0.1.0" "libhttp2 Programmer's Manual"
+.SH NAME
+websocket_create, websocket_create_with_config, websocket_destroy, websocket_reset \- websocket context lifecycle (client/server roles, configurable event queue)
+.SH SYNOPSIS
+.nf
+#include <websocket.h>
+
+websocket_ctx_t *websocket_create(ws_role_t role);
+websocket_ctx_t *websocket_create_with_config(ws_role_t role, const websocket_config_t *config);
+
+void websocket_destroy(websocket_ctx_t *ctx);
+void websocket_reset(websocket_ctx_t *ctx);
+.fi
+.SH DESCRIPTION
+.B websocket_create
+allocates and initializes a WebSocket context for the given role (WS_ROLE_CLIENT or WS_ROLE_SERVER). Uses default event queue size (8).
+
+.B websocket_create_with_config
+allows caller-specified configuration. The only field currently is \fBevent_queue_size\fP (must be > 0). Returns NULL if config is NULL/invalid or any allocation fails.
+
+.B websocket_destroy
+frees the context, its event queue, and any fragment buffers. Safe to call with NULL.
+
+.B websocket_reset
+resets internal state (queues, fragments, mask state) without freeing memory. Useful for connection reuse.
+
+All creation follows the configurable initialization pattern preferred for event-driven plumbing libraries.
+.SH RETURN VALUES
+create* return a valid ctx pointer or NULL on failure. Caller must check before use.
+.SH EXAMPLES
+.nf
+websocket_config_t cfg = { .event_queue_size = 32 };
+websocket_ctx_t *ws = websocket_create_with_config(WS_ROLE_SERVER, &cfg);
+if (!ws) { /* handle error */ }
+...
+websocket_destroy(ws);
+.fi
+.SH SEE ALSO
+websocket_next_event(3), websocket_feed_input(3), libhttp2(3), protocol_events.h
+.SH NOTES
+Contexts are opaque. Use only through the documented API. Event queue size controls backpressure tolerance.
