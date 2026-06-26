@@ -35,3 +35,21 @@
 - Run `ctest` before considering any change complete.
 - Parser / HPACK changes require a libFuzzer run (`http2_fuzz`) of several million iterations with no crashes.
 - All tests must pass under Valgrind with no leaks or memory errors.
+
+**Current Interface Direction (as of ADR 009)**
+- All protocol modules should expose a consistent shape:
+  - `*_config_t` (with `event_queue_size`)
+  - `*_create(role)` and `*_create_with_config(role, config)`
+  - `*_feed_input(ctx, data, len)`
+  - `*_next_event(ctx, &event)` returning `protocol_event_t`
+  - `*_get_output(ctx, buf, max)`
+- `http2_next_event` is implemented and emits `HTTP2_EVENT_DATA` / `HTTP2_EVENT_HEADERS`.
+- Legacy getters (`http2_current_state`, `http2_get_data`) remain for transition.
+
+**Known Limitations / Areas for Improvement**
+- HPACK: Only partial support; Huffman decoding is not yet implemented (see TODO in src/http2.c).
+- HTTP/2: Limited frame coverage (no full flow control, priority, or PUSH_PROMISE yet).
+- Event emission: `http2_next_event` is basic; more frame types should produce events.
+- Tests: Most tests still use the legacy getter API.
+
+When making changes, prefer extending the event-driven path over the legacy getters.
