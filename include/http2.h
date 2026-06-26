@@ -42,10 +42,19 @@ void http2_destroy(http2_ctx_t *ctx);
 void http2_reset(http2_ctx_t *ctx);
 
 /* === Core I/O (unchanged) === */
+/* feed_input: Accepts any buffer. Returns number of bytes consumed.
+   Invalid frames may transition the context to ERROR state.
+   Never passes through to syscalls. */
 size_t http2_feed_input(http2_ctx_t *ctx, const uint8_t *data, size_t len);
+
+/* get_output: Writes pending frames the library wants to send.
+   Returns 0 if nothing to send. */
 size_t http2_get_output(http2_ctx_t *ctx, uint8_t *buf, size_t max_len);
 
 /* === New event-driven interface (preferred) === */
+/* Returns 0 if an event was written to *event, -1 if no event available.
+   When the context is in ERROR state, returns HTTP2_EVENT_ERROR.
+   This is the preferred way to consume protocol events. */
 int http2_next_event(http2_ctx_t *ctx, protocol_event_t *event);
 
 /* === Legacy getters (kept for compatibility during transition) === */
