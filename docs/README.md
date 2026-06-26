@@ -33,3 +33,13 @@ Progressive disclosure documentation:
 - Valgrind + fuzz policy enforced on parser changes.
 
 All docs and manpages emphasize the plumbing model: libraries emit structured events and raw PDU data; caller owns decisions and I/O.
+## Recent Architecture Decisions
+
+- [008-c-only-examples-and-codebase.md](decisions/008-c-only-examples-and-codebase.md) — Strict C language requirement (no C++).
+- [009-consistent-protocol-interfaces.md](decisions/009-consistent-protocol-interfaces.md) — Unified `*_config_t` + `*_next_event` interface across http1/http2/websocket.
+- [010-c-interfaces-and-language-bindings.md](decisions/010-c-interfaces-and-language-bindings.md) — Adopt Hanson's *C Interfaces and Implementations* principles + design for language binding friendliness.
+
+## Language Bindings
+
+- [language-bindings.md](language-bindings.md) — General guidance for creating FFI-friendly bindings.
+- [perl-binding.md](perl-binding.md) — Perl + AnyEvent binding documentation and status.
