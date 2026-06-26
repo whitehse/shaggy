@@ -532,7 +532,7 @@ static void process_frame(http2_ctx_t *ctx)
 
 http2_ctx_t *http2_create(void)
 {
-    return http2_create_with_role(HTTP2_ROLE_SERVER);
+    return http2_create_with_role(HTTP2_ROLE_CLIENT);
 }
 
 http2_ctx_t *http2_create_with_role(http2_role_t role)
