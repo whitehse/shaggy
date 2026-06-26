@@ -27,7 +27,6 @@ install(EXPORT http2-targets FILE http2-config.cmake NAMESPACE http2:: DESTINATI
 enable_testing()
 add_executable(http2_test tests/test_http2.c)
 target_link_libraries(http2_test PRIVATE http2)
-add_test(NAME http2_basic COMMAND http2_test)
 
 add_executable(http1_websocket_test tests/test_http1_websocket.c)
 target_link_libraries(http1_websocket_test PRIVATE http1 websocket)

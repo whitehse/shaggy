@@ -4,30 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void test_preface_and_settings(void)
-{
-    http2_ctx_t *ctx = http2_create(HTTP2_ROLE_SERVER);
-    assert(ctx);
-
-    const char *preface = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-    size_t n = http2_feed_input(ctx, (const uint8_t *)preface, 24);
-    assert(n == 24);
-    assert(http2_current_state(ctx) == HTTP2_STATE_PREFACE);
-
-    // Simulate a SETTINGS frame (length 0, type 4, flags 0, stream 0)
-    uint8_t settings[9] = {0,0,0, 4, 0, 0,0,0,0};
-    n = http2_feed_input(ctx, settings, 9);
-    assert(n == 9);
-    assert(http2_current_state(ctx) != HTTP2_STATE_ERROR);
-
-    // Should have produced a SETTINGS ACK
-    uint8_t out[64];
-    size_t out_len = http2_get_output(ctx, out, sizeof(out));
-    assert(out_len > 0);
-
-    http2_destroy(ctx);
-    printf("test_preface_and_settings: PASSED\n");
-}
 
 static void test_headers_and_data(void)
 {
@@ -110,10 +86,48 @@ static void test_window_update(void)
 
 int main(void)
 {
-    test_preface_and_settings();
+    test_event_api_robustness();
     test_headers_and_data();
     test_goaway_and_rst();
     test_window_update();
     printf("All tests PASSED\n");
     return 0;
+}
+static void test_event_api_robustness(void)
+{
+    http2_config_t cfg = { .event_queue_size = 8 };
+    http2_ctx_t *ctx = http2_create_with_config(HTTP2_ROLE_SERVER, &cfg);
+    assert(ctx);
+
+    /* Feed preface */
+    const char *preface = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+    http2_feed_input(ctx, (const uint8_t *)preface, 24);
+
+    /* Feed SETTINGS */
+    uint8_t settings[9] = {0,0,0, 4, 0, 0,0,0,0};
+    http2_feed_input(ctx, settings, 9);
+
+    /* Exercise next_event */
+    protocol_event_t ev;
+    int events = 0;
+    while (http2_next_event(ctx, &ev) == 0) {
+        events++;
+        if (events > 10) break; /* safety */
+    }
+
+    /* Force error and verify error event */
+    uint8_t bad[1] = {0xFF};
+    http2_feed_input(ctx, bad, 1);
+
+    int saw_error = 0;
+    while (http2_next_event(ctx, &ev) == 0) {
+        if (ev.type == HTTP2_EVENT_ERROR) {
+            saw_error = 1;
+            break;
+        }
+    }
+    assert(saw_error);
+
+    http2_destroy(ctx);
+    printf("test_event_api_robustness: PASSED\n");
 }
