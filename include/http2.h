@@ -1,3 +1,10 @@
+/* http2.h — HTTP/2 state machine (ADR 010 compliant)
+ *
+ * Opaque types, consistent naming, and minimal public interface per
+ * "C Interfaces and Implementations" (Hanson). Designed to be friendly
+ * to language bindings (FFI-safe, no complex macros or bitfields).
+ */
+
 #ifndef HTTP2_H
 #define HTTP2_H
 

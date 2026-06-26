@@ -53,3 +53,9 @@
 - Tests: Most tests still use the legacy getter API.
 
 When making changes, prefer extending the event-driven path over the legacy getters.
+
+**ADR 010 Alignment (C Interfaces and Implementations + Language Bindings)**
+- All public interfaces follow opaque type principles from Hanson's *C Interfaces and Implementations*.
+- Public headers are designed to be FFI-friendly (simple types, no complex macros or bitfields).
+- Consistent naming and clear ownership semantics are maintained across `http1`, `http2`, and `websocket`.
+- When adding or modifying public functions, prefer designs that are easy to consume from other languages.
