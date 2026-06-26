@@ -11,6 +11,7 @@ extern "C" {
 typedef enum {
     PROTOCOL_NONE = 0,
     PROTOCOL_HTTP1,
+    PROTOCOL_HTTP2,
     PROTOCOL_WEBSOCKET,
 } protocol_type_t;
 
@@ -18,6 +19,7 @@ typedef enum {
     PROTOCOL_EVENT_NONE = 0,
     PROTOCOL_EVENT_ERROR,
 
+    /* HTTP/1 */
     HTTP1_EVENT_REQUEST_LINE,
     HTTP1_EVENT_STATUS_LINE,
     HTTP1_EVENT_HEADER,
@@ -25,6 +27,17 @@ typedef enum {
     HTTP1_EVENT_BODY_CHUNK,
     HTTP1_EVENT_UPGRADE_DETECTED,
 
+    /* HTTP/2 */
+    HTTP2_EVENT_SETTINGS,
+    HTTP2_EVENT_HEADERS,
+    HTTP2_EVENT_DATA,
+    HTTP2_EVENT_PUSH_PROMISE,
+    HTTP2_EVENT_PING,
+    HTTP2_EVENT_GOAWAY,
+    HTTP2_EVENT_WINDOW_UPDATE,
+    HTTP2_EVENT_STREAM_END,
+
+    /* WebSocket */
     WS_EVENT_TEXT,
     WS_EVENT_BINARY,
     WS_EVENT_PING,
@@ -66,8 +79,26 @@ typedef struct {
     size_t         len;
 } ws_message_t;
 
+/* HTTP/2 specific event data */
 typedef struct {
-    protocol_type_t      protocol;
+    uint32_t stream_id;
+    uint8_t  flags;
+} http2_headers_event_t;
+
+typedef struct {
+    uint32_t stream_id;
+    const uint8_t *data;
+    size_t len;
+    int end_stream;
+} http2_data_event_t;
+
+typedef struct {
+    uint32_t last_stream_id;
+    uint32_t error_code;
+} http2_goaway_event_t;
+
+typedef struct {
+    protocol_type_t       protocol;
     protocol_event_type_t type;
 
     union {
@@ -75,6 +106,10 @@ typedef struct {
         http1_status_line_t   http1_status;
         http1_header_t        http1_header;
         protocol_body_chunk_t body;
+
+        http2_headers_event_t http2_headers;
+        http2_data_event_t    http2_data;
+        http2_goaway_event_t  http2_goaway;
 
         ws_message_t          ws_message;
         ws_close_t            ws_close;

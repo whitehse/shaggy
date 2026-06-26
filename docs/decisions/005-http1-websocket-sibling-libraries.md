@@ -1,7 +1,7 @@
 # ADR 005: HTTP/1.1 and WebSocket as Sibling Libraries (Exception to Core HTTP/2 Structure)
 
 **Date**: 2026-06-24  
-**Status**: Accepted  
+**Status**: Accepted (amended 2026-06-26)  
 **Deciders**: Project maintainers
 
 ## Context
@@ -24,24 +24,27 @@ These new modules follow the same design principles as the HTTP/2 core:
 - Explicit `*_ROLE_CLIENT` / `*_ROLE_SERVER` support (dialectic principle from ADR 004).
 - No callbacks, no system calls.
 
-The HTTP/2 core remains untouched. The new HTTP/1.1 layer is primarily intended to support the WebSocket Upgrade handshake (and basic request/response for testing).
+The HTTP/2 core remains the primary focus but is no longer frozen. All three protocol modules should present a **consistent interface style** (config struct + event queue + `next_event` pattern).
 
 ## Rationale
-- Preserves the purity and security properties of the HTTP/2 implementation.
+- Preserves the purity and security properties of each protocol implementation.
 - Allows WebSocket to be added without polluting the HTTP/2 state machine.
 - Maintains the ability to test client ↔ server interactions using only in-memory buffer exchanges.
 - Follows the spirit of "one protocol, one focused state machine".
 
 ## Consequences
-- New source files and headers will be added.
-- CMake will build the additional static libraries/targets (`http1`, `websocket`).
-- New tests will be added under `tests/` exercising HTTP/1.1 Upgrade → WebSocket framing in both directions.
-- Documentation (ARCHITECTURE.md, DOMAIN.md) will be updated to describe the multi-protocol structure.
-- Future protocol additions should follow the same pattern (new focused state machine + ADR).
+- New source files and headers were added.
+- CMake builds the additional static libraries (`http1`, `websocket`).
+- New tests exercise HTTP/1.1 Upgrade → WebSocket framing.
+- All three modules should converge on a similar public API shape:
+  - `*_config_t` struct (e.g. `event_queue_size`)
+  - `*_create_with_config(role, config)`
+  - `*_next_event(ctx, &event)` returning a `protocol_event_t`
+  - `*_feed_input` + `*_get_output`
 
 ## Verification
 - All new code must compile with the same strict warning flags.
 - Dialectic tests (client ↔ server) must pass using only buffer hand-off.
-- No changes are allowed to `src/http2.c` or `include/http2.h`.
+- The HTTP/2 core **may** receive updates when needed to improve the protocol state machine, add missing features, or align interfaces. The important principle is **module separation**: HTTP/1.1 lives in its own files, WebSocket lives in its own files, and HTTP/2 lives in its own files. They should present similar high-level interfaces (config structs + event-driven `next_event` style) but remain independent implementations.
 
-This ADR formally records the exception to the "single core library" rule while protecting the original HTTP/2 design.
+This ADR records the multi-protocol structure while protecting the "one protocol, one focused state machine" philosophy. The original restriction against touching `http2.c`/`http2.h` is rescinded; the goal was module separation, not freezing the HTTP/2 implementation.
