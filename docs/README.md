@@ -13,6 +13,10 @@ Progressive disclosure documentation:
   - 005-http1-websocket-sibling-libraries.md
   - 006-core-library-as-plumbing-pdu-stack.md
   - 007-documentation-and-manpage-updates.md — Documentation and manpages must be updated together with any functional or API change
+  - 008-c-only-examples-and-codebase.md
+  - 009-consistent-protocol-interfaces.md
+  - 010-c-interfaces-and-language-bindings.md
+  - 011-nefarious-mitm-adversarial-testing.md (MITM harness for adversarial/fuzz testing)
 
 ## API Documentation
 - Manpages (section 3): See `man/man3/` (or installed under ${CMAKE_INSTALL_MANDIR}/man3). These document C calling conventions, return codes (NULL, 0/-1, byte counts, event 0/1), event data lifetimes, configurable initialization via `*_config_t`, and the plumbing/event model.
@@ -38,6 +42,7 @@ All docs and manpages emphasize the plumbing model: libraries emit structured ev
 - [008-c-only-examples-and-codebase.md](decisions/008-c-only-examples-and-codebase.md) — Strict C language requirement (no C++).
 - [009-consistent-protocol-interfaces.md](decisions/009-consistent-protocol-interfaces.md) — Unified `*_config_t` + `*_next_event` interface across http1/http2/websocket.
 - [010-c-interfaces-and-language-bindings.md](decisions/010-c-interfaces-and-language-bindings.md) — Adopt Hanson's *C Interfaces and Implementations* principles + design for language binding friendliness.
+- [011-nefarious-mitm-adversarial-testing.md](decisions/011-nefarious-mitm-adversarial-testing.md) — Nefarious MITM adversarial testing harness for robustness and fuzzing.
 
 ## Language Bindings
 
