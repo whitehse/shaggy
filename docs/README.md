@@ -17,6 +17,7 @@ Progressive disclosure documentation:
   - 009-consistent-protocol-interfaces.md
   - 010-c-interfaces-and-language-bindings.md
   - 011-nefarious-mitm-adversarial-testing.md (MITM harness for adversarial/fuzz testing)
+  - 012-extended-event-loop-and-real-time-compatibility.md (extends ADR 002 with ESP-IDF, coroutines, and real-time/RTOS requirements)
 
 ## API Documentation
 - Manpages (section 3): See `man/man3/` (or installed under ${CMAKE_INSTALL_MANDIR}/man3). These document C calling conventions, return codes (NULL, 0/-1, byte counts, event 0/1), event data lifetimes, configurable initialization via `*_config_t`, and the plumbing/event model.
