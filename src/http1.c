@@ -278,19 +278,12 @@ size_t http1_feed_input(http1_ctx_t *ctx, const uint8_t *data, size_t len)
             ctx->line[ctx->line_pos] = '\0';
 
             if (ctx->line_pos > 0) {
-                if ((strstr(ctx->line, "GET ") || strstr(ctx->line, "get ")) && ctx->role == HTTP1_ROLE_SERVER) {
-                    if (sscanf(ctx->line, "%15s %255s %15s", ctx->method, ctx->path, ctx->version) != 3) {
-                        protocol_event_t ev = { .protocol = PROTOCOL_HTTP1, .type = PROTOCOL_EVENT_ERROR };
-                        enqueue_event(ctx, &ev);
-                    } else if (strncmp(ctx->version, "HTTP/1.", 7) != 0) {
-                        protocol_event_t ev = { .protocol = PROTOCOL_HTTP1, .type = PROTOCOL_EVENT_ERROR };
-                        enqueue_event(ctx, &ev);
-                    } else if (!is_valid_method(ctx->method)) {
-                        protocol_event_t ev = { .protocol = PROTOCOL_HTTP1, .type = PROTOCOL_EVENT_ERROR };
-                        enqueue_event(ctx, &ev);
-                    } else {
-                        emit_event(ctx, HTTP1_EVENT_REQUEST_LINE);
-                    }
+                /* Server request line: any RFC method (GET/PUT/DELETE/…), not only GET. */
+                if (ctx->role == HTTP1_ROLE_SERVER &&
+                    sscanf(ctx->line, "%15s %255s %15s", ctx->method, ctx->path, ctx->version) == 3 &&
+                    strncmp(ctx->version, "HTTP/1.", 7) == 0 &&
+                    is_valid_method(ctx->method)) {
+                    emit_event(ctx, HTTP1_EVENT_REQUEST_LINE);
                 } else if (strstr(ctx->line, "HTTP/1.1 ") && ctx->role == HTTP1_ROLE_CLIENT) {
                     if (sscanf(ctx->line, "%15s %d %63[^\r\n]", ctx->version, &ctx->status_code, ctx->reason) != 3) {
                         protocol_event_t ev = { .protocol = PROTOCOL_HTTP1, .type = PROTOCOL_EVENT_ERROR };
